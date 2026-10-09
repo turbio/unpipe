@@ -1,6 +1,6 @@
 use rnix::ast::{BinOp, BinOpKind, Select};
-use rowan::ast::AstNode;
 use rnix::{NodeOrToken, Root, SyntaxKind::*, SyntaxNode};
+use rowan::ast::AstNode;
 use std::io::{self, Read, Write};
 use std::process::ExitCode;
 
@@ -104,7 +104,9 @@ fn unpipe(src: &str) -> Result<String, String> {
     let check = Root::parse(&out);
 
     if let Some(err) = check.errors().first() {
-        return Err(format!("internal error: output doesn't parse ({err}), refusing to write:\n{out}"));
+        return Err(format!(
+            "internal error: output doesn't parse ({err}), refusing to write:\n{out}"
+        ));
     }
 
     // ya never know
@@ -222,7 +224,10 @@ mod tests {
         t("f <| g <| a", "f (g a)");
         t("a |> f x |> g y z |> h", "h (g y z (f x a))");
         t("1 + 1 |> builtins.toString", "builtins.toString (1 + 1)");
-        t("builtins.toString <| 1 + 1 |> foo", "builtins.toString (foo (1 + 1))");
+        t(
+            "builtins.toString <| 1 + 1 |> foo",
+            "builtins.toString (foo (1 + 1))",
+        );
         t("c <| b <| a", "c (b a)");
     }
 
@@ -240,7 +245,10 @@ mod tests {
 
     #[test]
     fn nested_and_untouched() {
-        t("{ foo = a |> b; bar = a |> b |> c; }", "{ foo = b a; bar = c (b a); }");
+        t(
+            "{ foo = a |> b; bar = a |> b |> c; }",
+            "{ foo = b a; bar = c (b a); }",
+        );
         t("\"${a |> f}\"", "\"${f a}\"");
         t("let x = 1; in x", "let x = 1; in x");
         t("if a |> f then b else c", "if f a then b else c");
